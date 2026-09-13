@@ -2,7 +2,7 @@ let progress={format:"manual",achievements:[],collectedItems:[],completedChallen
 const $=id=>document.getElementById(id), setOf=a=>new Set((a||[]).map(Number));
 const hard=v=>Number(v)>=2, level=v=>hard(v)?"Hard":Number(v)===1?"Normal":"None";
 function uniq(a){return [...new Set(a.map(Number))].sort((x,y)=>x-y)}
-function persist(){localStorage.setItem(KEY,JSON.stringify(progress));if(!suppressSync){markUpdated();queueSync()}}
+function persist(){progress=normalizeProgress(progress);localStorage.setItem(KEY,JSON.stringify(progress));if(!suppressSync){markUpdated();queueSync()}}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>$("toast").classList.remove("show"),1200)}
 function toggleArray(key,id){let s=setOf(progress[key]);s.has(id)?s.delete(id):s.add(id);progress[key]=[...s];persist();renderAll()}
 function pct(a,b){return b?Math.round(a/b*100):0}
@@ -20,12 +20,12 @@ function renderChallenges(q=""){let s=setOf(progress.completedChallenges),h="",z
 function cycleMark(id,k){progress.completionMarks[id]??={};let v=Number(progress.completionMarks[id][k])||0;progress.completionMarks[id][k]=v===0?1:(v===1?2:0);persist();renderAll()}
 function renderCharacters(q=""){let z=q.toLowerCase().trim(),h="",marks=progress.completionMarks||{};let ids=Object.keys(CHARACTER_NAMES).map(Number).filter(id=>id<=40);ids.forEach(id=>{let n=CHARACTER_NAMES[id];if(z&&!`${id} ${n}`.toLowerCase().includes(z))return;let m=marks[id]||{},mh="";Object.entries(MARK_LABELS).forEach(([k,label])=>{let v=Number(m[k])||0;mh+=`<div class="mark ${hard(v)?"hard":v===1?"normal":""}" onclick="cycleMark(${id},'${k}')"><b>${label}</b><span>${level(v)}</span></div>`});h+=`<div class=character><h3>${n} <span class=muted>· PlayerType ${id}</span></h3><div class=marks>${mh}</div></div>`});$("characterList").innerHTML=h}
 function renderAll(){renderSummary();renderItems($("itemSearch").value);renderAchievements($("achievementSearch").value);renderChallenges($("challengeSearch").value);renderCharacters($("characterSearch").value)}
-$("saveInput").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.format==="tboi-progress-export-v2"){progress=x}else if(x.achievements&&x.collectedItems&&x.completedChallenges&&x.completionMarks){progress=x}else throw Error("Unsupported file");progress.achievements=uniq(progress.achievements||[]);progress.collectedItems=uniq(progress.collectedItems||[]);progress.completedChallenges=uniq(progress.completedChallenges||[]);persist();renderAll();$("status").textContent=`Loaded ${f.name} · ${progress.achievements.length} achievements · ${progress.collectedItems.length} items · ${progress.completedChallenges.length} challenges`;toast("Save imported")}catch(err){toast("Import failed");$("status").textContent=err.message}e.target.value=""};
+$("saveInput").onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(x.format==="tboi-progress-export-v2"){progress=x}else if(x.achievements&&x.collectedItems&&x.completedChallenges&&x.completionMarks){progress=x}else throw Error("Unsupported file");progress=normalizeProgress(progress);persist();renderAll();$("status").textContent=`Loaded ${f.name} · ${progress.achievements.length} achievements · ${progress.collectedItems.length} items · ${progress.completedChallenges.length} challenges`;toast("Save imported")}catch(err){toast("Import failed");$("status").textContent=err.message}e.target.value=""};
 $("exportBtn").onclick=()=>{let b=new Blob([JSON.stringify(progress,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="tboi-tracker-backup.json";a.click();URL.revokeObjectURL(a.href)};
 $("resetBtn").onclick=()=>{if(confirm("Reset all locally stored tracker progress?")){progress={format:"manual",achievements:[],collectedItems:[],completedChallenges:[],completionMarks:{}};persist();renderAll();toast("Progress reset")}};
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button,.tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")});
 ["item","achievement","challenge","character"].forEach(n=>$(n+"Search").oninput=renderAll);
-try{let old=JSON.parse(localStorage.getItem(KEY));if(old)progress=old}catch(e){}
+try{let old=JSON.parse(localStorage.getItem(KEY));if(old)progress=normalizeProgress(old)}catch(e){}
 $("syncBtn").onclick=()=>{$("syncModal").hidden=false;renderSync()};
 $("syncClose").onclick=()=>$("syncModal").hidden=true;
 $("syncModal").onclick=e=>{if(e.target===$("syncModal"))$("syncModal").hidden=true};
