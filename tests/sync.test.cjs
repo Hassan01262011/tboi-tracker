@@ -40,3 +40,12 @@ test('pairing uses server revision, never stamps local clock as newer',async()=>
   ctx.fetch=async()=>({ok:true,json:async()=>({updated_at:'server-revision',progress:{achievements:[7],_trackerUpdated:123}})});
   await run('connectSync()');assert.equal(run('syncStamp()'),123);assert.equal(run('dirty'),false);
 });
+test('Repentance+ IDs outside the Dead God tracker range are ignored',()=>{
+  const {run}=setup();
+  const json=run(`JSON.stringify(normalizeProgress({achievements:[1,638,639,1000],collectedItems:[1,732,733,1200],completedChallenges:[1,45,46,100],completionMarks:{0:{Isaac:2},40:{Beast:2},41:{Isaac:2}}}))`);
+  const p=JSON.parse(json);
+  assert.deepEqual(p.achievements,[1,638]);
+  assert.deepEqual(p.collectedItems,[1,732]);
+  assert.deepEqual(p.completedChallenges,[1,45]);
+  assert.deepEqual(Object.keys(p.completionMarks),['0','40']);
+});
