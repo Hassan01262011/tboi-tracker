@@ -10,7 +10,7 @@
   <div><div class="eyebrow">DEAD GOD PROGRESS</div><h1>TBOI Tracker</h1><p id="status">Import your REPENTOGON save or track progress manually.</p></div>
   <div class="actions">
     <label class="primary">Import save<input id="saveInput" type="file" accept=".dat,.json"></label>
-    <button id="exportBtn">Export backup</button><button id="resetBtn" class="danger">Reset</button>
+    <button id="syncBtn">Cloud sync</button><button id="exportBtn">Export backup</button><button id="resetBtn" class="danger">Reset</button>
   </div>
 </header>
 
@@ -52,6 +52,16 @@
  <div id="challengeGrid" class="grid"></div>
 </section>
 </main>
+<div id="syncModal" class="modal" hidden>
+ <div class="modalbox">
+  <div class="modalhead"><div><div class="eyebrow">PRIVATE CLOUD SYNC</div><h2>PC ↔ iPhone</h2></div><button id="syncClose">×</button></div>
+  <p id="syncStatus">Create a private sync code on this PC, then enter the same code on your iPhone.</p>
+  <div id="syncCreateArea"><button id="syncCreate" class="syncPrimary">Create sync code from this device</button></div>
+  <div class="syncFields"><label>Sync ID<input id="syncId" autocomplete="off" placeholder="SYNC ID"></label><label>Secret<input id="syncSecret" autocomplete="off" placeholder="SECRET"></label></div>
+  <div class="syncActions"><button id="syncConnect">Connect this device</button><button id="syncPush">Upload this device</button><button id="syncPull">Download cloud copy</button><button id="syncDisconnect" class="danger">Disconnect</button></div>
+  <p class="syncNote">Keep both values private. The secret is stored only in this browser. Sync uses the newest copy when the page opens and after local changes.</p>
+ </div>
+</div>
 <div id="toast"></div>
 <script src="data.js"></script><script src="app.js"></script>
 </body></html>

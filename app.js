@@ -1,10 +1,22 @@
 
 const KEY="tboiTracker.interactive.v2";
+const SYNC_KEY="tboiTracker.cloudSync.v1";
+const SYNC_ENDPOINT="https://rqkatvagyyumlzatiqmp.supabase.co/functions/v1/tracker-sync";
+let syncTimer=null,syncBusy=false,suppressSync=false;
+function getSync(){try{return JSON.parse(localStorage.getItem(SYNC_KEY))||null}catch(_){return null}}
+function setSync(v){v?localStorage.setItem(SYNC_KEY,JSON.stringify(v)):localStorage.removeItem(SYNC_KEY);renderSync()}
+async function syncApi(body){let r=await fetch(SYNC_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),x=await r.json().catch(()=>({}));if(!r.ok)throw Error(x.error||`Sync failed (${r.status})`);return x}
+function syncStamp(){return Number(localStorage.getItem(KEY+".updated"))||0}
+function markUpdated(){localStorage.setItem(KEY+".updated",String(Date.now()))}
+function renderSync(){let s=getSync(),id=$("syncId"),sec=$("syncSecret");if(!id)return;if(s){id.value=s.sync_id;sec.value=s.secret;$("syncStatus").textContent="Connected. Changes can sync between this device and your other devices.";$("syncCreateArea").hidden=true}else{$("syncStatus").textContent="Create a private sync code on this PC, then enter the same code on your iPhone.";$("syncCreateArea").hidden=false}}
+async function pushCloud(show=false){let s=getSync();if(!s||syncBusy||suppressSync)return;syncBusy=true;try{await syncApi({action:"push",...s,progress:{...progress,_trackerUpdated:syncStamp()}});if(show)toast("Uploaded to cloud")}catch(e){if(show)toast(e.message)}finally{syncBusy=false}}
+async function pullCloud(show=false){let s=getSync();if(!s||syncBusy)return;syncBusy=true;try{let x=await syncApi({action:"pull",...s}),cloud=x.progress||{},ct=Number(cloud._trackerUpdated)||0;if(ct>syncStamp()){delete cloud._trackerUpdated;suppressSync=true;progress=cloud;localStorage.setItem(KEY,JSON.stringify(progress));localStorage.setItem(KEY+".updated",String(ct));renderAll();suppressSync=false;if(show)toast("Downloaded cloud copy")}else if(show)toast("Already up to date")}catch(e){if(show)toast(e.message)}finally{syncBusy=false}}
+function queueSync(){clearTimeout(syncTimer);syncTimer=setTimeout(()=>pushCloud(false),700)}
 let progress={format:"manual",achievements:[],collectedItems:[],completedChallenges:[],completionMarks:{}};
 const $=id=>document.getElementById(id), setOf=a=>new Set((a||[]).map(Number));
 const hard=v=>Number(v)>=2, level=v=>hard(v)?"Hard":Number(v)===1?"Normal":"None";
 function uniq(a){return [...new Set(a.map(Number))].sort((x,y)=>x-y)}
-function persist(){localStorage.setItem(KEY,JSON.stringify(progress))}
+function persist(){localStorage.setItem(KEY,JSON.stringify(progress));if(!suppressSync){markUpdated();queueSync()}}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>$("toast").classList.remove("show"),1200)}
 function toggleArray(key,id){let s=setOf(progress[key]);s.has(id)?s.delete(id):s.add(id);progress[key]=[...s];persist();renderAll()}
 function pct(a,b){return b?Math.round(a/b*100):0}
@@ -28,5 +40,12 @@ $("resetBtn").onclick=()=>{if(confirm("Reset all locally stored tracker progress
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button,.tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.tab).classList.add("active")});
 ["item","achievement","challenge","character"].forEach(n=>$(n+"Search").oninput=renderAll);
 try{let old=JSON.parse(localStorage.getItem(KEY));if(old)progress=old}catch(e){}
+$("syncBtn").onclick=()=>{$("syncModal").hidden=false;renderSync()};
+$("syncClose").onclick=()=>$("syncModal").hidden=true;
+$("syncModal").onclick=e=>{if(e.target===$("syncModal"))$("syncModal").hidden=true};
+$("syncCreate").onclick=async()=>{try{let x=await syncApi({action:"create",progress:{...progress,_trackerUpdated:syncStamp()||Date.now()}}),s={sync_id:x.sync_id,secret:x.secret};setSync(s);$("syncStatus").textContent="Sync created. Open this tracker on your iPhone and enter these same two values.";toast("Sync code created")}catch(e){toast(e.message)}};
+$("syncConnect").onclick=async()=>{let s={sync_id:$("syncId").value.trim().toUpperCase(),secret:$("syncSecret").value.trim()};if(!s.sync_id||!s.secret)return toast("Enter Sync ID and Secret");setSync(s);try{let x=await syncApi({action:"pull",...s}),cloud=x.progress||{};delete cloud._trackerUpdated;suppressSync=true;progress=cloud;localStorage.setItem(KEY,JSON.stringify(progress));markUpdated();renderAll();suppressSync=false;toast("Connected and downloaded")}catch(e){setSync(null);toast(e.message)}};
+$("syncPush").onclick=()=>pushCloud(true);$("syncPull").onclick=()=>pullCloud(true);$("syncDisconnect").onclick=()=>{setSync(null);toast("Cloud sync disconnected")};
+window.addEventListener("focus",()=>pullCloud(false));
 if("serviceWorker"in navigator)navigator.serviceWorker.register("service-worker.js");
-renderAll();
+renderAll();renderSync();setTimeout(()=>pullCloud(false),500);
