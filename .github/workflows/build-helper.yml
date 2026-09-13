@@ -21,18 +21,31 @@ jobs:
           python-version: "3.12"
 
       - name: Install PyInstaller
-        run: python -m pip install --upgrade pip pyinstaller
+        run: python -m pip install pyinstaller==6.22.3 lupa==2.8
+
+      - name: Test sync and exporter
+        run: |
+          python -m unittest discover -s tests -p "test_*.py"
+          node --test tests/sync.test.cjs tests/edge.test.cjs
 
       - name: Build EXE
         run: >
           pyinstaller
           --onefile
+          --add-data "helper/exporter:exporter"
           --console
           --name TBOISyncHelper
           helper/tboi_sync_helper.py
+
+      - name: Verify packaged EXE
+        run: ./dist/TBOISyncHelper.exe --self-test
+
+      - name: Package setup files
+        shell: pwsh
+        run: Copy-Item helper/Install.cmd,helper/Disable-Autostart.cmd,helper/START-HERE.txt dist/
 
       - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
           name: TBOISyncHelper-Windows
-          path: dist/TBOISyncHelper.exe
+          path: dist/*

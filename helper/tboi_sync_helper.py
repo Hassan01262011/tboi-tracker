@@ -3,6 +3,10 @@ import os
 import sys
 import time
 import hashlib
+import shutil
+import subprocess
+import re
+import getpass
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -33,7 +37,8 @@ def log(message):
     except Exception:
         pass
 
-    print(line, flush=True)
+    if sys.stdout is not None:
+        print(line, flush=True)
 
 
 def post_json(payload):
@@ -84,6 +89,19 @@ def steam_candidates():
         Path(r"C:\Program Files (x86)\Steam"),
         Path(r"C:\Program Files\Steam"),
     ]
+
+    if os.name == 'nt':
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Valve\Steam') as key:
+                steam_roots.insert(0, Path(winreg.QueryValueEx(key, 'SteamPath')[0]))
+        except OSError:
+            pass
+    for root in list(steam_roots):
+        libraries = root / 'steamapps' / 'libraryfolders.vdf'
+        if libraries.exists():
+            for value in re.findall(r'"path"\s*"([^"]+)"', libraries.read_text(encoding='utf-8')):
+                steam_roots.append(Path(value.replace('\\\\', '\\')))
 
     # Check other drive letters for common Steam library locations.
     for letter in "DEFGHIJKLMNOPQRSTUVWXYZ":
@@ -177,6 +195,12 @@ def validate_progress(data):
             + ", ".join(missing)
         )
 
+    for key in ('achievements', 'collectedItems', 'completedChallenges'):
+        if not isinstance(data[key], list) or not all(type(v) is int and v > 0 for v in data[key]):
+            raise ValueError('Invalid export field: ' + key)
+    if not isinstance(data['completionMarks'], dict):
+        raise ValueError('Invalid completion marks')
+
     return data
 
 
@@ -207,7 +231,7 @@ def ensure_config():
         print()
 
         sync_id = input("Sync ID: ").strip().upper()
-        secret = input("Secret: ").strip()
+        secret = getpass.getpass("Secret (hidden while typing): ").strip()
 
         if not sync_id or not secret:
             raise RuntimeError(
@@ -248,15 +272,21 @@ def run_watch():
     print("=" * len(APP_NAME))
     print()
 
-    config = ensure_config()
+    if '--background' in sys.argv:
+        config = read_json(CONFIG_PATH)
+        if not all(config.get(k) for k in ('export_file', 'sync_id', 'secret')):
+            raise RuntimeError('Incomplete configuration. Run Install.cmd again.')
+    else:
+        config = ensure_config()
 
     export_path = Path(config["export_file"])
 
     state = load_state()
-    last_digest = state.get("last_digest")
+    identity = hashlib.sha256((str(export_path.resolve()) + config['sync_id'] + config['secret']).encode()).hexdigest()
+    last_digest = state.get("last_digest") if state.get('identity') == identity else None
 
     log(f"Watching: {export_path}")
-    log("Leave this window open while playing Isaac.")
+    log('Background sync active.' if '--background' in sys.argv else 'Leave this window open while playing Isaac, or run Install.cmd for background startup.')
 
     while True:
         try:
@@ -283,6 +313,7 @@ def run_watch():
                 progress["_trackerUpdated"] = int(
                     time.time() * 1000
                 )
+                progress['source'] = 'game'
 
                 post_json({
                     "action": "push",
@@ -297,6 +328,7 @@ def run_watch():
                     STATE_PATH,
                     {
                         "last_digest": digest,
+                        "identity": identity,
                         "last_upload_unix": int(
                             time.time()
                         ),
@@ -338,12 +370,86 @@ def run_watch():
             time.sleep(5)
 
 
+def install():
+    """Explicit one-time setup: backup exporter, install it, enable user startup."""
+    if os.name != 'nt' or not getattr(sys, 'frozen', False):
+        raise RuntimeError('Use the packaged Windows EXE for installation.')
+    print('Setup installs the continuous exporter and enables this helper at Windows sign-in.')
+    print('Close Isaac and any old sync helper windows before continuing.')
+    input('Press Enter when they are closed...')
+    config = ensure_config()
+    export = Path(config['export_file']).resolve()
+    game = export.parents[2]
+    if export.parent.name != 'tboi_progress_exporter' or export.parents[1].name != 'data' or not (game / 'isaac-ng.exe').exists():
+        raise RuntimeError('Expected the exporter save in Isaac/data/tboi_progress_exporter. No mod files changed.')
+    target = game / 'mods' / 'tboi_progress_exporter'
+    target.mkdir(parents=True, exist_ok=True)
+    source = Path(sys._MEIPASS) / 'exporter'
+    backup = appdata_dir() / ('exporter-backup-' + time.strftime('%Y%m%d-%H%M%S'))
+    backup.mkdir()
+    for name in ('main.lua', 'metadata.xml'):
+        if (target / name).exists():
+            shutil.copy2(target / name, backup / name)
+        shutil.copy2(source / name, target / name)
+    # Keep the user's configured save slot and pairing. Never modify Isaac's save.
+    installed = appdata_dir() / 'TBOISyncHelper.exe'
+    if Path(sys.executable).resolve() != installed.resolve():
+        shutil.copy2(sys.executable, installed)
+    import winreg
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Run') as key:
+        winreg.SetValueEx(key, 'TBOISyncHelper', 0, winreg.REG_SZ, '"' + str(installed) + '" --background')
+    subprocess.Popen([str(installed), '--background'], creationflags=subprocess.CREATE_NO_WINDOW)
+    print('Installed. The helper is running in the background and will start at sign-in.')
+    print('Restart Isaac; keep TBOI Progress Exporter enabled. Start or continue a run.')
+    print('Use your existing Cloud Sync code on the phone and PC website.')
+    print('Logs: ' + str(LOG_PATH))
+    print('Old exporter backup: ' + str(backup))
+    input('Press Enter to close setup...')
+
+
+def remove_startup():
+    import winreg
+    with winreg.CreateKey(winreg.HKEY_CURRENT_USER, r'Software\Microsoft\Windows\CurrentVersion\Run') as key:
+        try:
+            winreg.DeleteValue(key, 'TBOISyncHelper')
+        except FileNotFoundError:
+            pass
+    print('Automatic startup disabled. End TBOISyncHelper.exe in Task Manager to stop the current session.')
+    input('Press Enter to close...')
+
+
+def single_instance():
+    if os.name != 'nt':
+        return True
+    import ctypes
+    from ctypes import wintypes
+    api = ctypes.WinDLL('kernel32', use_last_error=True)
+    api.CreateMutexW.argtypes = [ctypes.c_void_p, wintypes.BOOL, wintypes.LPCWSTR]
+    api.CreateMutexW.restype = wintypes.HANDLE
+    single_instance.handle = api.CreateMutexW(None, False, r'Local\TBOITrackerSyncHelper')
+    return ctypes.get_last_error() != 183
+
+
 if __name__ == "__main__":
     try:
-        run_watch()
+        if '--self-test' in sys.argv:
+            source = Path(getattr(sys, '_MEIPASS', Path(__file__).parent)) / 'exporter'
+            assert (source / 'main.lua').is_file()
+            assert (source / 'metadata.xml').is_file()
+            validate_progress({'achievements': [], 'collectedItems': [], 'completedChallenges': [], 'completionMarks': {}})
+            print('PASS: packaged exporter and helper validation')
+        elif '--install' in sys.argv:
+            install()
+        elif '--remove-startup' in sys.argv:
+            remove_startup()
+        elif single_instance():
+            if '--background' in sys.argv and not CONFIG_PATH.exists():
+                raise RuntimeError('Run Install.cmd first to pair the helper.')
+            run_watch()
 
     except Exception as error:
         print()
         print(f"Fatal error: {error}")
-        input("Press Enter to close...")
+        if '--background' not in sys.argv:
+            input("Press Enter to close...")
         sys.exit(1)

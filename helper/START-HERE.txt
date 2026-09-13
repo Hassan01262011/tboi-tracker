@@ -1,0 +1,25 @@
+TBOI AUTOMATIC SYNC - WINDOWS
+
+1. Close Isaac and any old helper windows.
+2. Extract the entire ZIP. Double-click Install.cmd.
+3. If prompted, enter the EXISTING Sync ID and Secret from the website's Cloud sync.
+   Do not create a new code if you already have one. Never share the secret.
+4. Restart Isaac, enable TBOI Progress Exporter if needed, and start/continue a run.
+5. Open the tracker on your phone or PC and pair it with those same two values once.
+
+Setup backs up the old exporter, installs its continuous-export update, and adds
+TBOISyncHelper to your Windows user startup. No administrator rights are needed.
+Only the selected export file is read and uploaded. No game saves are modified.
+The helper runs in the background; no console window needs to stay open.
+Game changes are exported on achievement/mark events and checked every 120 game
+updates. The helper polls every 2 seconds; the visible website polls every 5.
+Offline uploads retry. A suspended/closed phone page refreshes when reopened.
+Game exports are authoritative and replace manual website edits.
+
+If Windows blocks this unsigned program, do not disable antivirus. Inspect the
+source/build on GitHub or send the exact warning before proceeding.
+
+Troubleshooting: %APPDATA%\TBOISyncHelper\helper.log
+Pairing: %APPDATA%\TBOISyncHelper\config.json (private; do not upload it).
+Disable-Autostart.cmd removes startup. To stop now, end TBOISyncHelper.exe using
+Task Manager. Exporter backups are in %APPDATA%\TBOISyncHelper\exporter-backup-*.
