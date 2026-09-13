@@ -1,9 +1,31 @@
 const KEY = "tboiTracker.interactive.v2";
 const SYNC_KEY = "tboiTracker.cloudSync.v1";
 const SYNC_ENDPOINT = "https://rqkatvagyyumlzatiqmp.supabase.co/functions/v1/tracker-sync";
+const DEAD_GOD_LIMITS = { achievements: 638, collectedItems: 732, completedChallenges: 45, maxCharacter: 40 };
 let syncTimer, syncBusy = false, suppressSync = false;
 let revision = null, editVersion = 0;
 let dirty = localStorage.getItem(KEY + '.dirty') === '1';
+function boundedIds(values, max) {
+  return [...new Set((Array.isArray(values) ? values : []).map(Number).filter(v => Number.isInteger(v) && v > 0 && v <= max))].sort((a,b) => a-b);
+}
+function normalizeProgress(value = {}) {
+  const p = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  const marks = {};
+  if (p.completionMarks && typeof p.completionMarks === 'object' && !Array.isArray(p.completionMarks)) {
+    for (const [id, mark] of Object.entries(p.completionMarks)) {
+      const n = Number(id);
+      if (Number.isInteger(n) && n >= 0 && n <= DEAD_GOD_LIMITS.maxCharacter && mark && typeof mark === 'object' && !Array.isArray(mark)) marks[n] = mark;
+    }
+  }
+  return {
+    ...p,
+    format: p.format || 'manual',
+    achievements: boundedIds(p.achievements, DEAD_GOD_LIMITS.achievements),
+    collectedItems: boundedIds(p.collectedItems, DEAD_GOD_LIMITS.collectedItems),
+    completedChallenges: boundedIds(p.completedChallenges, DEAD_GOD_LIMITS.completedChallenges),
+    completionMarks: marks
+  };
+}
 function getSync() { try { return JSON.parse(localStorage.getItem(SYNC_KEY)) || null; } catch { return null; } }
 function setSync(s) {
   s ? localStorage.setItem(SYNC_KEY, JSON.stringify(s)) : localStorage.removeItem(SYNC_KEY);
@@ -39,11 +61,11 @@ async function syncApi(body) {
   } finally { clearTimeout(timeout); }
 }
 function applyCloud(x) {
-  const cloud = x.progress || {};
-  progress = { format: 'manual', achievements: [], collectedItems: [], completedChallenges: [], completionMarks: {}, ...cloud };
+  const cloud = normalizeProgress(x.progress || {});
+  progress = cloud;
   delete progress._trackerUpdated;
   localStorage.setItem(KEY, JSON.stringify(progress));
-  localStorage.setItem(KEY + '.updated', String(Number(cloud._trackerUpdated) || 0));
+  localStorage.setItem(KEY + '.updated', String(Number(x.progress?._trackerUpdated) || 0));
   localStorage.removeItem(KEY + '.dirty'); dirty = false;
   revision = x.updated_at;
   renderAll();
@@ -81,6 +103,7 @@ async function pushCloud(show = false) {
       }
       revision = x.updated_at;
     }
+    progress = normalizeProgress(progress);
     const x = await syncApi({ action: 'push', ...s, base_updated_at: revision,
       progress: { ...progress, source: 'manual', _trackerUpdated: syncStamp() } });
     if (JSON.stringify(s) !== JSON.stringify(getSync())) return;
@@ -116,6 +139,7 @@ async function createSync() {
   if (syncBusy) return;
   syncBusy = true;
   try {
+    progress = normalizeProgress(progress);
     const x = await syncApi({ action: 'create', progress });
     setSync({ sync_id: x.sync_id, secret: x.secret });
     applyCloud({ ...x, progress: { ...progress, _trackerUpdated: x.tracker_updated } });
