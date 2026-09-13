@@ -1,18 +1,22 @@
-# Dead God Tracker
+# TBOI Tracker
 
 An interactive Dead God progression tracker for The Binding of Isaac: Repentance.
 
 ## Features
-- Top 10 item unlock priorities
-- Top 10 character priorities
-- Automatic progress saving
-- Search unlocks and characters
-- Import/export progress
+- Track achievements, collected items, challenges, and character completion marks
+- Manual checklist tracking directly on the website
+- Import REPENTOGON progression exports
+- Export tracker backups
+- Search items, achievements, challenges, and characters
+- Automatic local progress saving
+- Optional cloud sync across devices
+- Optional automatic game sync with the Windows Sync Helper
 - Works offline
 - Can be added to your phone's Home Screen
 
-Progress is stored locally on each user's device.
-# Automatic game sync
+Progress is stored locally on each user's device unless Cloud Sync is enabled.
+
+## Automatic game sync
 
 Download the latest successful **TBOISyncHelper-Windows** artifact from
 [Build TBOI Sync Helper](https://github.com/Hassan01262011/tboi-tracker/actions/workflows/build-helper.yml).
