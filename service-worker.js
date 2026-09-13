@@ -1,5 +1,1 @@
-const CACHE="tboi-tracker-full-v3";
-const CORE=["./","./index.html","./style.css","./data.js","./app.js","./manifest.json"];
-self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)))});
-self.addEventListener("activate",e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==CACHE)await caches.delete(k);await self.clients.claim()})()));
-self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith((async()=>{try{const r=await fetch(e.request);const c=await caches.open(CACHE);c.put(e.request,r.clone());return r}catch(_){return (await caches.match(e.request))||Response.error()}})())});
+const CACHE="tboi-tracker-interactive-v5",CORE=["./","./index.html","./style.css","./data.js","./app.js","./manifest.json"];self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)))});self.addEventListener("activate",e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==CACHE)await caches.delete(k);await self.clients.claim()})()));self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith((async()=>{try{let r=await fetch(e.request,{cache:"no-store"}),c=await caches.open(CACHE);c.put(e.request,r.clone());return r}catch(_){return await caches.match(e.request)}})())});

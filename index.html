@@ -1,72 +1,57 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#11131a">
-  <title>TBOI Tracker</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b0c10"><title>TBOI Tracker</title>
+<link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <div>
-    <h1>TBOI TRACKER</h1>
-    <p>Full Repentance progression tracker</p>
+<header class="topbar">
+  <div><div class="eyebrow">DEAD GOD PROGRESS</div><h1>TBOI Tracker</h1><p id="status">Import your REPENTOGON save or track progress manually.</p></div>
+  <div class="actions">
+    <label class="primary">Import save<input id="saveInput" type="file" accept=".dat,.json"></label>
+    <button id="exportBtn">Export backup</button><button id="resetBtn" class="danger">Reset</button>
   </div>
-  <label class="import">IMPORT REPENTOGON SAVE<input id="saveInput" type="file" accept=".dat,.json,application/json"></label>
 </header>
 
-<section id="summary" class="summary">
-  <div><b id="achievementCount">0 / 638</b><span>Achievements</span></div>
-  <div><b id="itemCount">0 / 732</b><span>Items collected</span></div>
-  <div><b id="challengeCount">0 / 45</b><span>Challenges</span></div>
-  <div><b id="markCount">0</b><span>Hard completion marks</span></div>
+<section class="stats">
+ <article><span>Achievements</span><strong id="achievementCount">0 / 638</strong><div class="bar"><i id="achievementBar"></i></div></article>
+ <article><span>Items</span><strong id="itemCount">0 / 732</strong><div class="bar"><i id="itemBar"></i></div></article>
+ <article><span>Challenges</span><strong id="challengeCount">0 / 45</strong><div class="bar"><i id="challengeBar"></i></div></article>
+ <article><span>Hard marks</span><strong id="markCount">0</strong><div class="bar"><i id="markBar"></i></div></article>
 </section>
 
-<div id="status" class="status">Import the <b>save1.dat</b> created by TBOI Progress Exporter.</div>
-
 <nav>
-  <button data-tab="dashboard" class="active">Dashboard</button>
-  <button data-tab="items">Items</button>
-  <button data-tab="characters">Characters</button>
-  <button data-tab="achievements">Achievements</button>
-  <button data-tab="challenges">Challenges</button>
+ <button class="active" data-tab="dashboard">Overview</button><button data-tab="items">Items</button>
+ <button data-tab="characters">Characters</button><button data-tab="achievements">Achievements</button>
+ <button data-tab="challenges">Challenges</button>
 </nav>
 
 <main>
-  <section id="dashboard" class="tab active">
-    <h2>Progress</h2>
-    <div id="dashboardCards" class="cards"></div>
-  </section>
-
-  <section id="items" class="tab">
-    <div class="sectionhead"><h2>All Items</h2><input id="itemSearch" placeholder="Search item name or ID"></div>
-    <p class="hint">Green = collected at least once. The exporter records collection-page status.</p>
-    <div id="itemGrid" class="grid"></div>
-  </section>
-
-  <section id="characters" class="tab">
-    <div class="sectionhead"><h2>Character Completion</h2><input id="characterSearch" placeholder="Search character"></div>
-    <p class="hint">Each boss mark shows None, Normal, or Hard. REPENTOGON's raw value 3 is treated as Hard/complete because that is what your current build exports for completed Hard marks.</p>
-    <div id="characterList"></div>
-  </section>
-
-  <section id="achievements" class="tab">
-    <div class="sectionhead"><h2>All Achievements / Secrets</h2><input id="achievementSearch" placeholder="Search name or ID"></div>
-    <div id="achievementGrid" class="grid"></div>
-  </section>
-
-  <section id="challenges" class="tab">
-    <div class="sectionhead"><h2>All Challenges</h2><input id="challengeSearch" placeholder="Search challenge"></div>
-    <div id="challengeGrid" class="grid"></div>
-  </section>
+<section id="dashboard" class="tab active">
+ <div class="hero">
+  <div><div class="eyebrow">CURRENT SAVE</div><h2 id="overallPercent">0% tracked</h2><p>Click any item, achievement, challenge, or completion mark to change it manually. Importing a save updates everything again.</p></div>
+  <div class="legend"><span><i class="dot doneDot"></i> Complete</span><span><i class="dot"></i> Incomplete</span></div>
+ </div>
+ <h2>Quick progress</h2><div id="dashboardCards" class="cards"></div>
+</section>
+<section id="items" class="tab">
+ <div class="sectionhead"><div><h2>Items</h2><p>Tap a card to toggle collected status.</p></div><input id="itemSearch" placeholder="Search item or ID"></div>
+ <div id="itemGrid" class="grid"></div>
+</section>
+<section id="characters" class="tab">
+ <div class="sectionhead"><div><h2>Character completion</h2><p>Tap a boss mark to cycle None → Normal → Hard.</p></div><input id="characterSearch" placeholder="Search character"></div>
+ <div id="characterList"></div>
+</section>
+<section id="achievements" class="tab">
+ <div class="sectionhead"><div><h2>Achievements & secrets</h2><p>Tap to toggle unlocked status.</p></div><input id="achievementSearch" placeholder="Search achievement or ID"></div>
+ <div id="achievementGrid" class="grid"></div>
+</section>
+<section id="challenges" class="tab">
+ <div class="sectionhead"><div><h2>Challenges</h2><p>Tap to toggle completion.</p></div><input id="challengeSearch" placeholder="Search challenge or ID"></div>
+ <div id="challengeGrid" class="grid"></div>
+</section>
 </main>
-
-<footer>
-  Progress is stored only in this browser. Importing a new exporter file replaces the displayed save snapshot.
-</footer>
-<script src="data.js"></script>
-<script src="app.js"></script>
-</body>
-</html>
+<div id="toast"></div>
+<script src="data.js"></script><script src="app.js"></script>
+</body></html>
