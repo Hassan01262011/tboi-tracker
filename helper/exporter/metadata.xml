@@ -1,7 +1,7 @@
 <metadata>
-  <name>Dead God Tracker Sync</name>
+  <name>TBOI Tracker</name>
   <directory>tboi_progress_exporter</directory>
   <id>tboi_progress_exporter</id>
-  <description>Automatically exports your Binding of Isaac: Repentance progression for Dead God Tracker. Tracks achievements, collected items, challenges, and character completion marks. Requires REPENTOGON and the Dead God Tracker Sync Helper.</description>
+  <description>Automatically exports your Binding of Isaac: Repentance progression for TBOI Tracker. Tracks achievements, collected items, challenges, and character completion marks. Requires REPENTOGON and the TBOI Tracker Sync Helper.</description>
   <version>3.0</version>
 </metadata>
