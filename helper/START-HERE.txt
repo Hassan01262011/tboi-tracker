@@ -1,25 +1,37 @@
-TBOI AUTOMATIC SYNC - WINDOWS
+TBOI TRACKER AUTOMATIC SYNC - WINDOWS
 
-1. Close Isaac and any old helper windows.
-2. Extract the entire ZIP. Double-click Install.cmd.
-3. If prompted, enter the EXISTING Sync ID and Secret from the website's Cloud sync.
-   Do not create a new code if you already have one. Never share the secret.
-4. Restart Isaac, enable TBOI Progress Exporter if needed, and start/continue a run.
-5. Open the tracker on your phone or PC and pair it with those same two values once.
+1. Close Isaac and any old TBOI Sync Helper windows.
+2. Extract the entire ZIP and double-click Install.cmd.
+3. The installer finds your Isaac folder and checks REPENTOGON.
+   - If REPENTOGON is already installed, it leaves it alone.
+   - If it is missing, the installer offers to download the matching official
+     TeamREPENTOGON release and verifies the download before installing it.
+   - Base Repentance uses the compatible legacy REPENTOGON build.
+   - Repentance+ uses the official REPENTOGON Launcher; finish its setup when it opens.
+4. If prompted, enter the EXISTING Sync ID and Secret from the website's Cloud Sync.
+   Do not create a new code if you already have one. Never share the Secret.
+5. Start Isaac with TBOI Tracker enabled and start/continue a run.
+6. Open the tracker on your phone or PC and pair it with those same values once.
 
-Setup backs up the old exporter, installs its continuous-export update, and adds
-TBOISyncHelper to your Windows user startup. No administrator rights are needed.
-Only the selected export file is read and uploaded. No game saves are modified.
-The helper runs in the background; no console window needs to stay open.
-Game changes are exported on achievement/mark events and checked every 120 game
-updates. The helper polls every 2 seconds; the visible website polls every 5.
-Offline uploads retry. A suspended/closed phone page refreshes when reopened.
-Game exports are authoritative and replace manual website edits.
+If the Steam Workshop copy of TBOI Tracker is already installed, setup leaves
+Steam-managed mod files alone. Otherwise it installs the bundled exporter copy.
+The helper then starts in the background and is added to your Windows user startup.
+It can finish setup even before save1.dat exists; the helper waits for the first
+export automatically. No Isaac save file is modified.
 
-If Windows blocks this unsigned program, do not disable antivirus. Inspect the
-source/build on GitHub or send the exact warning before proceeding.
+REPENTOGON downloads come directly from TeamREPENTOGON's official GitHub releases.
+The helper validates the official SHA-256 information before installing downloaded
+files when that information is available. Base Repentance files that would be
+overwritten are backed up under %APPDATA%\TBOISyncHelper\repentogon-backup-*.
+
+The helper polls the exported progress every 2 seconds. The visible website checks
+cloud sync every 5 seconds and on focus/reconnect. Closed or suspended phone pages
+refresh when reopened. Game exports are authoritative over manual website edits.
+
+If Windows blocks the unsigned TBOI Sync Helper, do not disable antivirus. Inspect
+the source/build on GitHub or report the exact warning before proceeding.
 
 Troubleshooting: %APPDATA%\TBOISyncHelper\helper.log
 Pairing: %APPDATA%\TBOISyncHelper\config.json (private; do not upload it).
-Disable-Autostart.cmd removes startup. To stop now, end TBOISyncHelper.exe using
-Task Manager. Exporter backups are in %APPDATA%\TBOISyncHelper\exporter-backup-*.
+Disable-Autostart.cmd removes startup. To stop it immediately, end
+TBOISyncHelper.exe in Task Manager.
