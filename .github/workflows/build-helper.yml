@@ -7,6 +7,9 @@ on:
       - "helper/**"
       - ".github/workflows/build-helper.yml"
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -42,10 +45,30 @@ jobs:
 
       - name: Package setup files
         shell: pwsh
-        run: Copy-Item helper/Install.cmd,helper/Disable-Autostart.cmd,helper/START-HERE.txt dist/
+        run: |
+          Copy-Item helper/Install.cmd,helper/Disable-Autostart.cmd,helper/START-HERE.txt dist/
+          Compress-Archive -Path dist/* -DestinationPath TBOISyncHelper-Windows.zip -Force
 
-      - name: Upload EXE
+      - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: TBOISyncHelper-Windows
           path: dist/*
+
+      - name: Publish stable public download
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "sync-helper-latest"
+          $asset = "TBOISyncHelper-Windows.zip"
+          if (gh release view $tag --repo $env:GITHUB_REPOSITORY 2>$null) {
+            gh release upload $tag $asset --clobber --repo $env:GITHUB_REPOSITORY
+          } else {
+            gh release create $tag $asset `
+              --repo $env:GITHUB_REPOSITORY `
+              --target $env:GITHUB_SHA `
+              --title "TBOI Sync Helper - Latest Windows Build" `
+              --notes "Latest tested Windows helper for TBOI Tracker. Extract the ZIP and run Install.cmd with Isaac closed. The installer checks for REPENTOGON and offers to install the matching official dependency if needed."
+          }
