@@ -1,1 +1,5 @@
-const C="tboi-tracker-v2",F=["./","./index.html","./style.css","./app.js","./data.js","./manifest.json"];self.addEventListener("install",e=>e.waitUntil(caches.open(C).then(c=>c.addAll(F))));self.addEventListener("fetch",e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+const CACHE="tboi-tracker-full-v3";
+const CORE=["./","./index.html","./style.css","./data.js","./app.js","./manifest.json"];
+self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)))});
+self.addEventListener("activate",e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==CACHE)await caches.delete(k);await self.clients.claim()})()));
+self.addEventListener("fetch",e=>{if(e.request.method!=="GET")return;e.respondWith((async()=>{try{const r=await fetch(e.request);const c=await caches.open(CACHE);c.put(e.request,r.clone());return r}catch(_){return (await caches.match(e.request))||Response.error()}})())});

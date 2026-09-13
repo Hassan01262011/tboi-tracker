@@ -1,49 +1,82 @@
 
-const KEY="deadGodTracker.v1";
-const blank=()=>({version:1,completedItems:[],completedCharacters:[]});
-let state=load();
+const STORAGE_KEY="tboiTracker.full.v1";
+let progress={format:"",achievements:[],collectedItems:[],completedChallenges:[],completionMarks:{}};
 
-function load(){try{return {...blank(),...JSON.parse(localStorage.getItem(KEY)||"{}")}}catch{return blank()}}
-function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
-function done(type,id){const k=type==="item"?"completedItems":"completedCharacters";return state[k].includes(id)}
-function toggle(type,id){const k=type==="item"?"completedItems":"completedCharacters";state[k]=done(type,id)?state[k].filter(x=>x!==id):[...state[k],id];save()}
+function load(){
+  try{const x=JSON.parse(localStorage.getItem(STORAGE_KEY)); if(x) progress=x}catch(e){}
+  renderAll();
+}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(progress))}
+const setOf=a=>new Set((a||[]).map(Number));
+function isHard(v){return Number(v)>=2} // current export can report 3 for completed marks
+function diff(v){v=Number(v)||0; return isHard(v)?"Hard":v===1?"Normal":"None"}
 
-function card(x,type,rank){
- const el=document.createElement("div"); el.className="card"+(done(type,x.id)?" done":"");
- el.innerHTML=`<div class="check">${done(type,x.id)?"✓":""}</div><div><div class="badge">${type}</div><div class="name"></div><div class="how"></div></div>${rank?`<div class="rank">#${rank}</div>`:""}`;
- el.querySelector(".name").textContent=x.name; el.querySelector(".how").textContent=x.how;
- el.onclick=()=>toggle(type,x.id); return el;
+function renderSummary(){
+  const a=setOf(progress.achievements), i=setOf(progress.collectedItems), c=setOf(progress.completedChallenges);
+  achievementCount.textContent=`${a.size} / 638`;
+  itemCount.textContent=`${i.size} / 732`;
+  challengeCount.textContent=`${c.size} / 45`;
+  let hard=0,total=0;
+  Object.values(progress.completionMarks||{}).forEach(m=>Object.keys(MARK_LABELS).forEach(k=>{
+    if(k==="UltraGreedier")return; total++; if(isHard(m[k]))hard++;
+  }));
+  markCount.textContent=progress.format?`${hard} / ${total}`:"0";
+  dashboardCards.innerHTML=`
+    <div class="card"><h3>Achievements</h3><div class="big">${a.size}</div><div class="muted">${638-a.size} remaining</div></div>
+    <div class="card"><h3>Collection</h3><div class="big">${i.size}</div><div class="muted">${732-i.size} vanilla collectible IDs not marked collected</div></div>
+    <div class="card"><h3>Challenges</h3><div class="big">${c.size}</div><div class="muted">${45-c.size} remaining</div></div>
+    <div class="card"><h3>Hard Marks</h3><div class="big">${hard}</div><div class="muted">Across exported PlayerTypes</div></div>`;
 }
-function renderList(id,data,type){
- const box=document.getElementById(id); box.innerHTML="";
- data.filter(x=>!done(type,x.id)).sort((a,b)=>b.priority-a.priority).slice(0,10).forEach((x,i)=>box.appendChild(card(x,type,i+1)));
- if(!box.children.length) box.innerHTML='<div class="how">Everything in this queue is complete.</div>';
+function renderItems(q=""){
+  const done=setOf(progress.collectedItems); q=q.toLowerCase().trim(); let h="";
+  for(let id=1;id<=732;id++){let name=KNOWN_ITEMS[id]||`Collectible #${id}`; if(q&&!(`${id} ${name}`.toLowerCase().includes(q)))continue;
+    h+=`<div class="entry ${done.has(id)?"done":""}"><div class="id">ITEM ${id}</div><div class="name">${name}</div><div class="state">${done.has(id)?"COLLECTED":"NOT COLLECTED"}</div></div>`}
+  itemGrid.innerHTML=h;
 }
-function render(){
- renderList("items",TRACKER_DATA.items,"item"); renderList("characters",TRACKER_DATA.characters,"character");
- const n=state.completedItems.length+state.completedCharacters.length;
- document.getElementById("progress").textContent=`${n} tracker goals completed`;
+function renderAchievements(q=""){
+  const done=setOf(progress.achievements); q=q.toLowerCase().trim(); let h="";
+  for(let id=1;id<=638;id++){let name=KNOWN_ACHIEVEMENTS[id]||`Achievement / Secret #${id}`; if(q&&!(`${id} ${name}`.toLowerCase().includes(q)))continue;
+    h+=`<div class="entry ${done.has(id)?"done":""}"><div class="id">ACHIEVEMENT ${id}</div><div class="name">${name}</div><div class="state">${done.has(id)?"UNLOCKED":"LOCKED"}</div></div>`}
+  achievementGrid.innerHTML=h;
 }
-const search=document.getElementById("search");
-search.addEventListener("input",()=>{
- const q=search.value.trim().toLowerCase(), sr=document.getElementById("searchResults"), main=document.getElementById("main"), out=document.getElementById("results");
- if(!q){sr.classList.add("hidden");main.classList.remove("hidden");return}
- main.classList.add("hidden");sr.classList.remove("hidden");out.innerHTML="";
- [...TRACKER_DATA.items.map(x=>[x,"item"]),...TRACKER_DATA.characters.map(x=>[x,"character"])]
- .filter(([x])=>(x.name+" "+x.how).toLowerCase().includes(q))
- .forEach(([x,t])=>out.appendChild(card(x,t)));
+function renderChallenges(q=""){
+  const done=setOf(progress.completedChallenges); q=q.toLowerCase().trim(); let h="";
+  for(let id=1;id<=45;id++){let name=CHALLENGE_NAMES[id]||`Challenge #${id}`; if(q&&!(`${id} ${name}`.toLowerCase().includes(q)))continue;
+    h+=`<div class="entry ${done.has(id)?"done":""}"><div class="id">CHALLENGE ${id}</div><div class="name">${name}</div><div class="state">${done.has(id)?"COMPLETED":"NOT COMPLETED"}</div></div>`}
+  challengeGrid.innerHTML=h;
+}
+function renderCharacters(q=""){
+  q=q.toLowerCase().trim(); let h="";
+  const marks=progress.completionMarks||{};
+  Object.keys(marks).sort((a,b)=>+a-+b).forEach(id=>{
+    let name=CHARACTER_NAMES[id]||`PlayerType ${id}`; if(q&&!(`${id} ${name}`.toLowerCase().includes(q)))return;
+    const m=marks[id]||{}; let mh="";
+    Object.entries(MARK_LABELS).forEach(([k,label])=>{
+      let v=m[k]||0; mh+=`<div class="mark ${isHard(v)?"hard":v===1?"normal":""}"><b>${label}</b><span>${diff(v)} · raw ${v}</span></div>`;
+    });
+    h+=`<div class="character"><h3>${name} <span class="muted">· PlayerType ${id}</span></h3><div class="marks">${mh}</div></div>`;
+  });
+  characterList.innerHTML=h||`<div class="card">Import a REPENTOGON exporter save to display character marks.</div>`;
+}
+function renderAll(){renderSummary();renderItems(itemSearch?.value||"");renderAchievements(achievementSearch?.value||"");renderChallenges(challengeSearch?.value||"");renderCharacters(characterSearch?.value||"")}
+
+saveInput.addEventListener("change",async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  try{
+    const x=JSON.parse(await f.text());
+    if(x.format!=="tboi-progress-export-v2" || !Array.isArray(x.achievements) || !x.completionMarks) throw Error("Not a v2 exporter file");
+    progress=x; save(); renderAll();
+    status.innerHTML=`Loaded <b>${f.name}</b>: ${x.achievements.length} achievements, ${x.collectedItems.length} collected items, ${x.completedChallenges.length} challenges.`;
+  }catch(err){status.textContent="Import failed: "+err.message}
+  e.target.value="";
 });
-document.getElementById("closeSearch").onclick=()=>{search.value="";search.dispatchEvent(new Event("input"))}
-document.getElementById("menuBtn").onclick=()=>document.getElementById("savePanel").classList.toggle("hidden");
-document.getElementById("exportBtn").onclick=()=>{
- const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");
- a.href=URL.createObjectURL(blob);a.download="dead-god-progress.json";a.click();URL.revokeObjectURL(a.href);
-};
-document.getElementById("importInput").onchange=async e=>{
- const f=e.target.files[0];if(!f)return;
- try{const v=JSON.parse(await f.text());state={...blank(),...v};save();alert("Progress imported.")}catch{alert("That save file could not be read.")}
- e.target.value="";
-};
-document.getElementById("resetBtn").onclick=()=>{if(confirm("Reset all tracker progress on this device?")){state=blank();save()}};
-if("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
-render();
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button,.tab").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); document.getElementById(b.dataset.tab).classList.add("active");
+});
+itemSearch.oninput=()=>renderItems(itemSearch.value);
+achievementSearch.oninput=()=>renderAchievements(achievementSearch.value);
+challengeSearch.oninput=()=>renderChallenges(challengeSearch.value);
+characterSearch.oninput=()=>renderCharacters(characterSearch.value);
+if("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js");
+load();

@@ -1,53 +1,72 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#15120f">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TBOI TRACKER">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icon-192.svg">
-<link rel="stylesheet" href="./style.css">
-<title>TBOI Tracker</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#11131a">
+  <title>TBOI Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
   <div>
     <h1>TBOI TRACKER</h1>
-    <p id="progress">0 completed</p>
+    <p>Full Repentance progression tracker</p>
   </div>
-  <button id="menuBtn">Save</button>
+  <label class="import">IMPORT REPENTOGON SAVE<input id="saveInput" type="file" accept=".dat,.json,application/json"></label>
 </header>
 
-<div class="toolbar">
-  <input id="search" placeholder="Search items, characters, unlock methods…">
-</div>
+<section id="summary" class="summary">
+  <div><b id="achievementCount">0 / 638</b><span>Achievements</span></div>
+  <div><b id="itemCount">0 / 732</b><span>Items collected</span></div>
+  <div><b id="challengeCount">0 / 45</b><span>Challenges</span></div>
+  <div><b id="markCount">0</b><span>Hard completion marks</span></div>
+</section>
 
-<div id="savePanel" class="panel hidden">
-  <button id="exportBtn">Export Save</button>
-  <label class="fileBtn">Import Save<input id="importInput" type="file" accept=".json,application/json"></label>
-  <button id="resetBtn" class="danger">Reset Progress</button>
-</div>
+<div id="status" class="status">Import the <b>save1.dat</b> created by TBOI Progress Exporter.</div>
 
-<main id="main">
-  <section>
-    <div class="sectionTitle"><h2>Top 10 Items</h2><span>Specific unlocks</span></div>
-    <div id="items" class="cards"></div>
+<nav>
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="items">Items</button>
+  <button data-tab="characters">Characters</button>
+  <button data-tab="achievements">Achievements</button>
+  <button data-tab="challenges">Challenges</button>
+</nav>
+
+<main>
+  <section id="dashboard" class="tab active">
+    <h2>Progress</h2>
+    <div id="dashboardCards" class="cards"></div>
   </section>
-  <section>
-    <div class="sectionTitle"><h2>Top 10 Characters</h2><span>Finish these next</span></div>
-    <div id="characters" class="cards"></div>
+
+  <section id="items" class="tab">
+    <div class="sectionhead"><h2>All Items</h2><input id="itemSearch" placeholder="Search item name or ID"></div>
+    <p class="hint">Green = collected at least once. The exporter records collection-page status.</p>
+    <div id="itemGrid" class="grid"></div>
+  </section>
+
+  <section id="characters" class="tab">
+    <div class="sectionhead"><h2>Character Completion</h2><input id="characterSearch" placeholder="Search character"></div>
+    <p class="hint">Each boss mark shows None, Normal, or Hard. REPENTOGON's raw value 3 is treated as Hard/complete because that is what your current build exports for completed Hard marks.</p>
+    <div id="characterList"></div>
+  </section>
+
+  <section id="achievements" class="tab">
+    <div class="sectionhead"><h2>All Achievements / Secrets</h2><input id="achievementSearch" placeholder="Search name or ID"></div>
+    <div id="achievementGrid" class="grid"></div>
+  </section>
+
+  <section id="challenges" class="tab">
+    <div class="sectionhead"><h2>All Challenges</h2><input id="challengeSearch" placeholder="Search challenge"></div>
+    <div id="challengeGrid" class="grid"></div>
   </section>
 </main>
 
-<div id="searchResults" class="hidden">
-  <div class="sectionTitle"><h2>Search Results</h2><button id="closeSearch">Close</button></div>
-  <div id="results" class="cards"></div>
-</div>
-
-<script src="./data.js"></script>
-<script src="./app.js"></script>
+<footer>
+  Progress is stored only in this browser. Importing a new exporter file replaces the displayed save snapshot.
+</footer>
+<script src="data.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
