@@ -1,9 +1,14 @@
 # Dead God Tracker
 
-Upload the files in this folder to the ROOT of your GitHub repository.
+An interactive Dead God progression tracker for The Binding of Isaac: Repentance.
 
-GitHub Pages:
-Settings -> Pages -> Deploy from a branch -> main -> /(root)
+## Features
+- Top 10 item unlock priorities
+- Top 10 character priorities
+- Automatic progress saving
+- Search unlocks and characters
+- Import/export progress
+- Works offline
+- Can be added to your phone's Home Screen
 
-The public tracker starts blank for each browser. Progress is stored in localStorage.
-Use Save -> Import Save to load hassan-progress.json on your device.
+Progress is stored locally on each user's device.
