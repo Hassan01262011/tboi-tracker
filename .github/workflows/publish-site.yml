@@ -32,3 +32,4 @@ jobs:
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@v4
+# Fresh-run trigger after a transient GitHub Pages deployment failure.
