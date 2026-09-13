@@ -18,11 +18,11 @@ Progress is stored locally on each user's device unless Cloud Sync is enabled.
 
 ## Automatic game sync
 
-Download the latest successful **TBOISyncHelper-Windows** artifact from
-[Build TBOI Sync Helper](https://github.com/Hassan01262011/tboi-tracker/actions/workflows/build-helper.yml),
-extract the ZIP, and run `Install.cmd` once with Isaac closed.
+[Download the latest Windows Sync Helper](https://github.com/Hassan01262011/tboi-tracker/releases/download/sync-helper-latest/TBOISyncHelper-Windows.zip),
+extract the ZIP, and run `Install.cmd` once with Isaac closed. This download URL stays
+the same when a newer tested helper build is published.
 
-The installer now handles the REPENTOGON dependency for you. It finds the Isaac
+The installer handles the REPENTOGON dependency for you. It finds the Isaac
 installation, checks which game edition is installed, and leaves an existing
 REPENTOGON installation alone. If REPENTOGON is missing, it asks before downloading
 from TeamREPENTOGON's official GitHub releases. Base Repentance uses the compatible
@@ -32,7 +32,7 @@ installed when the official release provides SHA-256 information.
 
 If the Steam Workshop copy of **TBOI Tracker** is already present, the helper does
 not overwrite Steam-managed mod files. Otherwise it installs its bundled exporter.
-Setup no longer requires `save1.dat` to exist first: the background helper waits for
+Setup does not require `save1.dat` to exist first: the background helper waits for
 the first export after the user starts/continues a run.
 
 On each browser, use **Cloud Sync** and your same existing Sync ID and Secret. Do not
