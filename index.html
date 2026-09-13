@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#15120f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dead God">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.svg">
+<link rel="stylesheet" href="./style.css">
+<title>Dead God Tracker</title>
+</head>
+<body>
+<header>
+  <div>
+    <h1>DEAD GOD TRACKER</h1>
+    <p id="progress">0 completed</p>
+  </div>
+  <button id="menuBtn">Save</button>
+</header>
+
+<div class="toolbar">
+  <input id="search" placeholder="Search items, characters, unlock methods…">
+</div>
+
+<div id="savePanel" class="panel hidden">
+  <button id="exportBtn">Export Save</button>
+  <label class="fileBtn">Import Save<input id="importInput" type="file" accept=".json,application/json"></label>
+  <button id="resetBtn" class="danger">Reset Progress</button>
+</div>
+
+<main id="main">
+  <section>
+    <div class="sectionTitle"><h2>Top 10 Items</h2><span>Specific unlocks</span></div>
+    <div id="items" class="cards"></div>
+  </section>
+  <section>
+    <div class="sectionTitle"><h2>Top 10 Characters</h2><span>Finish these next</span></div>
+    <div id="characters" class="cards"></div>
+  </section>
+</main>
+
+<div id="searchResults" class="hidden">
+  <div class="sectionTitle"><h2>Search Results</h2><button id="closeSearch">Close</button></div>
+  <div id="results" class="cards"></div>
+</div>
+
+<script src="./data.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>

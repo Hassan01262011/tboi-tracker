@@ -1,0 +1,16 @@
+
+:root{font-family:Inter,system-ui,-apple-system,sans-serif;color:#f3eee7;background:#15120f}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#2a211a,#15120f 55%)}
+header{position:sticky;top:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:18px max(18px,env(safe-area-inset-left));background:#15120fe8;backdrop-filter:blur(12px);border-bottom:1px solid #3b3027}
+h1{font-size:20px;letter-spacing:2px;margin:0}header p{margin:4px 0 0;color:#a99b8e;font-size:13px}
+button,.fileBtn{border:1px solid #59483a;background:#2a211a;color:#f3eee7;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+.toolbar{max-width:1180px;margin:18px auto 0;padding:0 18px}.toolbar input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid #4b3d32;background:#201a16;color:white;font-size:16px;outline:none}
+main{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:1180px;margin:18px auto;padding:0 18px 40px}
+section,#searchResults{background:#1d1814;border:1px solid #3b3027;border-radius:16px;padding:14px}
+.sectionTitle{display:flex;align-items:center;justify-content:space-between;margin:2px 4px 12px}.sectionTitle h2{margin:0;font-size:18px}.sectionTitle span{color:#9f9185;font-size:12px}
+.cards{display:flex;flex-direction:column;gap:9px}.card{display:flex;gap:12px;align-items:flex-start;padding:13px;background:#27201a;border:1px solid #40342b;border-radius:12px;transition:.15s}.card:hover{transform:translateY(-1px);border-color:#665343}
+.check{flex:0 0 26px;width:26px;height:26px;border-radius:7px;border:2px solid #766354;background:#171310;display:grid;place-items:center;font-weight:900}.card.done{opacity:.52}.card.done .check{background:#e7ded4;color:#1b1713;border-color:#e7ded4}.name{font-weight:850}.how{color:#b8aa9e;font-size:13px;margin-top:3px;line-height:1.35}.rank{margin-left:auto;color:#7f7064;font-size:12px}
+.panel{max-width:1180px;margin:10px auto;padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap}.panel input{display:none}.danger{border-color:#74443d}.hidden{display:none!important}
+#searchResults{max-width:1144px;margin:18px auto 40px}
+.badge{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#8f8074;margin-bottom:3px}
+@media(max-width:760px){main{grid-template-columns:1fr;padding:0 10px 30px;gap:12px}.toolbar{padding:0 10px}header{padding:14px 12px}h1{font-size:17px}section{padding:11px}.card{padding:12px}}
