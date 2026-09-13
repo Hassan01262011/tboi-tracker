@@ -35,10 +35,11 @@ jobs:
         run: >
           pyinstaller
           --onefile
+          --paths helper
           --add-data "helper/exporter:exporter"
           --console
           --name TBOISyncHelper
-          helper/tboi_sync_helper.py
+          helper/tboi_sync_helper_entry.py
 
       - name: Verify packaged EXE
         run: ./dist/TBOISyncHelper.exe --self-test
